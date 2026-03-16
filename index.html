@@ -31,7 +31,7 @@
     }
 
     header h1 {
-      font-size: 1.05rem;
+      font-size: 1.08rem;
       font-weight: 600;
       color: #e0e0e0;
       letter-spacing: 0.02em;
@@ -670,7 +670,7 @@ function showTooltip(event, d) {
     <div class="tt-row"><span class="tt-label">English</span><span>${p.pct_english.toFixed(1)}%</span></div>
     <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_english}%;background:#dd6a29"></div></div>
     <div class="tt-row"><span class="tt-label">Other</span><span>${(p.pct_non_official||0).toFixed(1)}%</span></div>
-    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_non_official||0}%;background:#3cb44b"></div></div>
+    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_non_official||0}%;background:#d3d3d3"></div></div>
     <div class="tt-row" style="margin-top:4px;font-size:0.68rem;">
       <span class="tt-label">Population</span><span>${(p.Population||0).toLocaleString()}</span>
     </div>`;
