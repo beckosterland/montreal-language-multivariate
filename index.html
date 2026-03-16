@@ -271,7 +271,7 @@
   <div>
     <h1>Two Solitudes No More?</h1>
     <h2>The Liguistic Mix of Montréal's Census Metropolitan Area</h2>
-    <p id="subtitle">Bivariate map of French &amp; English speakers by census tract · 2021 Census</p>
+    <p id="subtitle">Bivariate map of Français &amp; English speakers by census tract · 2021 Census</p>
   </div>
   <div id="tab-bar">
     <button class="tab active" id="tab-bivariate">BIVARIATE</button>
@@ -301,7 +301,7 @@
         <div class="panel-title">Bivariate Legend</div>
         <div id="legend-wrap">
           <div id="legend-axes">
-            <div class="axis-label">← Low &nbsp; French % &nbsp; High →</div>
+            <div class="axis-label">← Low &nbsp; Français % &nbsp; High →</div>
           </div>
           <div>
             <div id="legend-grid"></div>
@@ -342,7 +342,7 @@
       <div class="panel">
         <div class="panel-title">Colour Anchors</div>
         <div style="font-size:0.73rem;line-height:2.1;">
-          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#169dd0;vertical-align:middle;margin-right:6px;"></span>French<br>
+          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#169dd0;vertical-align:middle;margin-right:6px;"></span>Français<br>
           <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#dd6a29;vertical-align:middle;margin-right:6px;"></span>English<br>
           <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#3cb44b;vertical-align:middle;margin-right:6px;"></span>Other language
         </div>
@@ -368,7 +368,7 @@ const COLOR_MATRIX = [
   ["#7ebbd2", "#819185", "#845e29"],  // FR=Mid
   ["#169dd0", "#167984", "#174f28"],  // FR=High
 ];
-const FR_LABELS = ["Low French",  "Mid French",  "High French"];
+const FR_LABELS = ["Low Français",  "Mid Français",  "High Français"];
 const EN_LABELS = ["Low English", "Mid English", "High English"];
 
 // ═══════════════════════════════════════════════════════════════
@@ -455,7 +455,7 @@ function drawTriangleLegend() {
   // Vertex labels
   const wrap = document.getElementById("legend-triangle-wrap");
   [
-    { text: "French",  x: vFr.x, y: vFr.y, color: "#169dd0", tx: "-50%", ty: "-115%" },
+    { text: "Français",  x: vFr.x, y: vFr.y, color: "#169dd0", tx: "-50%", ty: "-115%" },
     { text: "English", x: vEn.x, y: vEn.y, color: "#dd6a29", tx: "-15%", ty: "12%"   },
     { text: "Other",   x: vOt.x, y: vOt.y, color: "#3cb44b", tx: "-85%", ty: "12%"   },
   ].forEach(({ text, x, y, color, tx, ty }) => {
@@ -478,8 +478,8 @@ let geoData, frBreaks, enBreaks;
 //  Tab switching
 // ═══════════════════════════════════════════════════════════════
 const SUBTITLES = {
-  bivariate:  'Bivariate map of French &amp; English speakers by census tract · 2021 Census',
-  trivariate: 'Trivariate map of French, English &amp; Other language speakers by census tract · 2021 Census',
+  bivariate:  'Bivariate map of Français &amp; English speakers by census tract · 2021 Census',
+  trivariate: 'Trivariate map of Français, English &amp; Other language speakers by census tract · 2021 Census',
 };
 
 function switchTab(tab) {
@@ -665,7 +665,7 @@ function showTooltip(event, d) {
   tooltip.innerHTML = `
     <h3><span class="tt-swatch" style="background:${color}"></span>Tract ${p.name}</h3>
     ${p.name_2 ? `<div style="font-size:0.7rem;color:#8899aa;margin:-4px 0 6px 15px;">${p.name_2}</div>` : ''}
-    <div class="tt-row"><span class="tt-label">French</span><span>${p.pct_french.toFixed(1)}%</span></div>
+    <div class="tt-row"><span class="tt-label">Français</span><span>${p.pct_french.toFixed(1)}%</span></div>
     <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_french}%;background:#169dd0"></div></div>
     <div class="tt-row"><span class="tt-label">English</span><span>${p.pct_english.toFixed(1)}%</span></div>
     <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_english}%;background:#dd6a29"></div></div>
@@ -706,7 +706,7 @@ function updateInfoPanel(p, color) {
     ["District",   p.name_2 || "—"],
     ["Population", (p.Population||0).toLocaleString()],
     ["Dwellings",  (p.Dwellings||0).toLocaleString()],
-    ["French %",   p.pct_french.toFixed(2) + "%"],
+    ["Français %",   p.pct_french.toFixed(2) + "%"],
     ["English %",  p.pct_english.toFixed(2) + "%"],
     ["Other %",    (p.pct_non_official||0).toFixed(2) + "%"],
     ["Arabic %",   (p.pct_arabic||0).toFixed(2) + "%"],
@@ -753,7 +753,7 @@ async function init() {
   enBreaks = computeEqualIntervals(valid.map(f => f.properties.pct_english));
 
   document.getElementById("breaks-content").innerHTML = `
-    <div style="margin-bottom:4px;color:#169dd0;">French %</div>
+    <div style="margin-bottom:4px;color:#169dd0;">Français %</div>
     Low: &lt; ${frBreaks[0].toFixed(1)}%<br>
     Mid: ${frBreaks[0].toFixed(1)}–${frBreaks[1].toFixed(1)}%<br>
     High: &gt; ${frBreaks[1].toFixed(1)}%
