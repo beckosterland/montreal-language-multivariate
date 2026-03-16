@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Montréal CMA — Mother Tongue Languages</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header & tabs ── */
+    header {
+      padding: 10px 20px 8px;
+      background: #16213e;
+      border-bottom: 1px solid #0f3460;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    header h1 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #e0e0e0;
+      letter-spacing: 0.02em;
+    }
+
+    header h2 {
+      font-size: 1.02rem;
+      font-weight: 300;
+      color: #e0e0e0;
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      font-size: 0.72rem;
+      color: #8899aa;
+      margin-top: 2px;
+    }
+
+    #tab-bar {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .tab {
+      padding: 5px 16px;
+      border-radius: 20px;
+      border: 1px solid #1e3a5f;
+      background: transparent;
+      color: #7799bb;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .tab:hover { background: #1e2a4e; color: #c0d8f0; }
+
+    .tab.active {
+      background: #1e3a5f;
+      color: #e8f4ff;
+      border-color: #5698b9;
+    }
+
+    /* ── Layout ── */
+    #main { display: flex; flex: 1; overflow: hidden; }
+
+    #map-container { flex: 1; position: relative; overflow: hidden; }
+
+    svg#map { width: 100%; height: 100%; cursor: grab; }
+    svg#map:active { cursor: grabbing; }
+
+    .tract {
+      stroke: #1a1a2e;
+      stroke-width: 0.3px;
+      transition: stroke-width 0.1s, stroke 0.1s;
+    }
+    .tract:hover { stroke: #ffffff; stroke-width: 1.2px; }
+    .tract.no-data { fill: #2a2a3e; stroke: #3a3a5e; stroke-width: 0.3px; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 270px;
+      background: #16213e;
+      border-left: 1px solid #0f3460;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    /* sidebar section wrappers — flex column so gap works */
+    .side-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel {
+      background: #0f1a2e;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .panel-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #7799bb;
+      margin-bottom: 10px;
+    }
+
+    /* ── Bivariate 3×3 legend ── */
+    #legend-wrap { display: flex; align-items: flex-end; gap: 8px; }
+
+    #legend-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 36px);
+      grid-template-rows: repeat(3, 36px);
+      gap: 2px;
+    }
+
+    .legend-cell {
+      border-radius: 3px;
+      cursor: pointer;
+      opacity: 0.9;
+      transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+      box-sizing: border-box;
+    }
+    .legend-cell:hover { opacity: 1; transform: scale(1.08); }
+    .legend-cell.active { opacity: 1; box-shadow: 0 0 0 2.5px #ffffff; transform: scale(1.08); }
+
+    #legend-axes { display: flex; flex-direction: column; justify-content: flex-end; height: 110px; }
+
+    .axis-label {
+      font-size: 0.65rem;
+      color: #8899aa;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      text-align: center;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    #legend-bottom { display: flex; justify-content: space-between; margin-top: 4px; }
+    .legend-bottom-label { font-size: 0.6rem; color: #8899aa; text-align: center; }
+    .legend-arrow { font-size: 0.65rem; color: #5698b9; }
+
+    /* ── Trivariate triangle ── */
+    #legend-triangle-wrap { position: relative; display: flex; justify-content: center; }
+    #legend-canvas { border-radius: 4px; }
+    .vertex-label {
+      position: absolute;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.3;
+      pointer-events: none;
+    }
+
+    /* ── Tooltip ── */
+    #tooltip {
+      position: absolute;
+      background: rgba(15, 26, 46, 0.96);
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s;
+      max-width: 220px;
+      z-index: 100;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    #tooltip.visible { opacity: 1; }
+    #tooltip h3 { font-size: 0.82rem; color: #c0d8f0; margin-bottom: 6px; font-weight: 600; }
+
+    .tt-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 3px; color: #aabbd0; }
+    .tt-label { color: #7799bb; }
+    .tt-bar-wrap { height: 4px; background: #1e3a5f; border-radius: 2px; margin: 2px 0 6px; overflow: hidden; }
+    .tt-bar { height: 100%; border-radius: 2px; }
+    .tt-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+
+    /* ── Info panel ── */
+    #info-panel .info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.73rem;
+      padding: 3px 0;
+      border-bottom: 1px solid #1a2a40;
+      color: #aabbd0;
+    }
+    #info-panel .info-row:last-child { border-bottom: none; }
+    #info-panel .info-key { color: #7799bb; }
+
+    /* ── Tile canvas (behind SVG) ── */
+    #tile-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    /* ── Zoom controls ── */
+    #zoom-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 50;
+    }
+
+    .zoom-btn {
+      width: 30px; height: 30px;
+      background: #16213e;
+      border: 1px solid #1e3a5f;
+      border-radius: 6px;
+      color: #c0d8f0;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .zoom-btn:hover { background: #1e3a5f; }
+
+    /* ── Loader ── */
+    .loader {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #1a1a2e; z-index: 200;
+      font-size: 0.9rem; color: #7799bb; letter-spacing: 0.05em;
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid #1e3a5f; border-top-color: #5698b9;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Two Solitudes No More?</h1>
+    <h2>The Liguistic Mix of Montréal's Census Metropolitan Area</h2>
+    <p id="subtitle">Bivariate map of French &amp; English speakers by census tract · 2021 Census</p>
+  </div>
+  <div id="tab-bar">
+    <button class="tab active" id="tab-bivariate">BIVARIATE</button>
+    <button class="tab"        id="tab-trivariate">TRIVARIATE</button>
+  </div>
+</header>
+
+<div id="main">
+  <div id="map-container">
+    <div class="loader" id="loader"><div class="spinner"></div>Loading census tracts…</div>
+    <canvas id="tile-canvas"></canvas>
+    <svg id="map"></svg>
+    <div id="tooltip"></div>
+    <div id="zoom-controls">
+      <button class="zoom-btn" id="zoom-in"    title="Zoom in">+</button>
+      <button class="zoom-btn" id="zoom-out"   title="Zoom out">−</button>
+      <button class="zoom-btn" id="zoom-reset" title="Reset view" style="font-size:0.65rem;">⌂</button>
+    </div>
+  </div>
+
+  <div id="sidebar">
+
+    <!-- ══ BIVARIATE panels ══ -->
+    <div class="side-section" id="side-bivariate">
+
+      <div class="panel">
+        <div class="panel-title">Bivariate Legend</div>
+        <div id="legend-wrap">
+          <div id="legend-axes">
+            <div class="axis-label">← Low &nbsp; French % &nbsp; High →</div>
+          </div>
+          <div>
+            <div id="legend-grid"></div>
+            <div id="legend-bottom">
+              <span class="legend-bottom-label">Low<br>English %</span>
+              <span class="legend-arrow">→</span>
+              <span class="legend-bottom-label">High<br>English %</span>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:0.62rem;color:#556677;margin-top:10px;line-height:1.5;">
+          Equal interval breaks (data range ÷ 3).
+          Hover to preview · click to lock filter.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Class Breaks</div>
+        <div id="breaks-content" style="font-size:0.72rem;color:#7799bb;line-height:1.9;">Loading…</div>
+      </div>
+
+    </div><!-- /side-bivariate -->
+
+    <!-- ══ TRIVARIATE panels ══ -->
+    <div class="side-section" id="side-trivariate" style="display:none;">
+
+      <div class="panel">
+        <div class="panel-title">Trivariate Legend</div>
+        <div id="legend-triangle-wrap">
+          <canvas id="legend-canvas"></canvas>
+        </div>
+        <p style="font-size:0.62rem;color:#556677;margin-top:10px;line-height:1.5;">
+          Continuous RGB blend of three anchor colours
+          weighted by the normalised share of each language group.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Colour Anchors</div>
+        <div style="font-size:0.73rem;line-height:2.1;">
+          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#169dd0;vertical-align:middle;margin-right:6px;"></span>French<br>
+          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#dd6a29;vertical-align:middle;margin-right:6px;"></span>English<br>
+          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#3cb44b;vertical-align:middle;margin-right:6px;"></span>Other language
+        </div>
+      </div>
+
+    </div><!-- /side-trivariate -->
+
+    <!-- ══ Shared info panel ══ -->
+    <div class="panel" id="info-panel">
+      <div class="panel-title">Census Tract Info</div>
+      <p style="font-size:0.73rem;color:#556677;">Hover a tract on the map to see details.</p>
+    </div>
+
+  </div><!-- /sidebar -->
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  BIVARIATE colour matrix   (rows=FR class 0-2, cols=EN class 0-2)
+// ═══════════════════════════════════════════════════════════════
+const COLOR_MATRIX = [
+  ["#d3d3d3", "#d8a386", "#dd6a29"],  // FR=Low
+  ["#7ebbd2", "#819185", "#845e29"],  // FR=Mid
+  ["#169dd0", "#167984", "#174f28"],  // FR=High
+];
+const FR_LABELS = ["Low French",  "Mid French",  "High French"];
+const EN_LABELS = ["Low English", "Mid English", "High English"];
+
+// ═══════════════════════════════════════════════════════════════
+//  TRIVARIATE colour blend
+//  Anchors: French=#169dd0  English=#dd6a29  Other=#3cb44b
+// ═══════════════════════════════════════════════════════════════
+const ANCHORS = {
+  fr: { r: 22,  g: 157, b: 208 },
+  en: { r: 221, g: 106, b: 41  },
+  ot: { r: 60,  g: 180, b: 75  },
+};
+
+function trivariateColor(pctFr, pctEn, pctOt) {
+  const total = (pctFr || 0) + (pctEn || 0) + (pctOt || 0);
+  if (!total) return '#2a2a3e';
+  const fr = pctFr / total, en = pctEn / total, ot = pctOt / total;
+  const r = Math.round(fr * ANCHORS.fr.r + en * ANCHORS.en.r + ot * ANCHORS.ot.r);
+  const g = Math.round(fr * ANCHORS.fr.g + en * ANCHORS.en.g + ot * ANCHORS.ot.g);
+  const b = Math.round(fr * ANCHORS.fr.b + en * ANCHORS.en.b + ot * ANCHORS.ot.b);
+  return `rgb(${r},${g},${b})`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Build bivariate 3×3 legend grid
+// ═══════════════════════════════════════════════════════════════
+const grid = document.getElementById("legend-grid");
+for (let fr = 2; fr >= 0; fr--) {
+  for (let en = 0; en <= 2; en++) {
+    const cell = document.createElement("div");
+    cell.className = "legend-cell";
+    cell.style.background = COLOR_MATRIX[fr][en];
+    cell.title = `${FR_LABELS[fr]} · ${EN_LABELS[en]}`;
+    cell.dataset.fr = fr;
+    cell.dataset.en = en;
+    cell.addEventListener("mouseenter", () => highlightClass(+cell.dataset.fr, +cell.dataset.en));
+    cell.addEventListener("mouseleave", () => {
+      if (selectedClass) highlightClass(selectedClass.fr, selectedClass.en);
+      else clearHighlight();
+    });
+    cell.addEventListener("click", () => {
+      const f = +cell.dataset.fr, e = +cell.dataset.en;
+      const isActive = selectedClass && selectedClass.fr === f && selectedClass.en === e;
+      document.querySelectorAll(".legend-cell").forEach(c => c.classList.remove("active"));
+      if (isActive) { selectedClass = null; clearHighlight(); }
+      else { selectedClass = { fr: f, en: e }; cell.classList.add("active"); highlightClass(f, e); }
+    });
+    grid.appendChild(cell);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Draw trivariate triangle legend on canvas (pixel-fill)
+// ═══════════════════════════════════════════════════════════════
+function drawTriangleLegend() {
+  const SIZE = 200, PAD = 28;
+  const canvas = document.getElementById("legend-canvas");
+  canvas.width = canvas.height = SIZE;
+  const ctx = canvas.getContext("2d");
+
+  const vFr = { x: SIZE / 2,   y: PAD        };  // top    = French
+  const vEn = { x: SIZE - PAD, y: SIZE - PAD  };  // right  = English
+  const vOt = { x: PAD,        y: SIZE - PAD  };  // left   = Other
+
+  const denom = (vEn.y - vOt.y) * (vFr.x - vOt.x) + (vOt.x - vEn.x) * (vFr.y - vOt.y);
+
+  const img = ctx.createImageData(SIZE, SIZE);
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < SIZE; x++) {
+      const u = ((vEn.y - vOt.y) * (x - vOt.x) + (vOt.x - vEn.x) * (y - vOt.y)) / denom;
+      const v = ((vOt.y - vFr.y) * (x - vOt.x) + (vFr.x - vOt.x) * (y - vOt.y)) / denom;
+      const w = 1 - u - v;
+      if (u >= -0.005 && v >= -0.005 && w >= -0.005) {
+        const fr = Math.max(0, u), en = Math.max(0, v), ot = Math.max(0, w);
+        const i = (y * SIZE + x) * 4;
+        img.data[i]   = Math.round(fr * ANCHORS.fr.r + en * ANCHORS.en.r + ot * ANCHORS.ot.r);
+        img.data[i+1] = Math.round(fr * ANCHORS.fr.g + en * ANCHORS.en.g + ot * ANCHORS.ot.g);
+        img.data[i+2] = Math.round(fr * ANCHORS.fr.b + en * ANCHORS.en.b + ot * ANCHORS.ot.b);
+        img.data[i+3] = 230;
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  // Vertex labels
+  const wrap = document.getElementById("legend-triangle-wrap");
+  [
+    { text: "French",  x: vFr.x, y: vFr.y, color: "#169dd0", tx: "-50%", ty: "-115%" },
+    { text: "English", x: vEn.x, y: vEn.y, color: "#dd6a29", tx: "-15%", ty: "12%"   },
+    { text: "Other",   x: vOt.x, y: vOt.y, color: "#3cb44b", tx: "-85%", ty: "12%"   },
+  ].forEach(({ text, x, y, color, tx, ty }) => {
+    const el = document.createElement("div");
+    el.className = "vertex-label";
+    el.textContent = text;
+    el.style.cssText = `color:${color};left:${x}px;top:${y}px;transform:translate(${tx},${ty})`;
+    wrap.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  State
+// ═══════════════════════════════════════════════════════════════
+let activeTab = 'bivariate';
+let selectedClass = null;
+let geoData, frBreaks, enBreaks;
+
+// ═══════════════════════════════════════════════════════════════
+//  Tab switching
+// ═══════════════════════════════════════════════════════════════
+const SUBTITLES = {
+  bivariate:  'Bivariate map of French &amp; English speakers by census tract · 2021 Census',
+  trivariate: 'Trivariate map of French, English &amp; Other language speakers by census tract · 2021 Census',
+};
+
+function switchTab(tab) {
+  if (tab === activeTab) return;
+  activeTab = tab;
+
+  document.getElementById('tab-bivariate').classList.toggle('active',  tab === 'bivariate');
+  document.getElementById('tab-trivariate').classList.toggle('active', tab === 'trivariate');
+  document.getElementById('subtitle').innerHTML = SUBTITLES[tab];
+  document.getElementById('side-bivariate').style.display  = tab === 'bivariate'  ? 'flex' : 'none';
+  document.getElementById('side-trivariate').style.display = tab === 'trivariate' ? 'flex' : 'none';
+
+  // Clear bivariate filter on leaving that tab
+  if (tab !== 'bivariate') {
+    selectedClass = null;
+    document.querySelectorAll('.legend-cell').forEach(c => c.classList.remove('active'));
+  }
+
+  clearHighlight();
+  applyColors();
+  resetInfoPanel();
+  hideTooltip();
+}
+
+document.getElementById('tab-bivariate').addEventListener('click',  () => switchTab('bivariate'));
+document.getElementById('tab-trivariate').addEventListener('click', () => switchTab('trivariate'));
+
+// ═══════════════════════════════════════════════════════════════
+//  SVG / zoom
+// ═══════════════════════════════════════════════════════════════
+const mapContainer = document.getElementById("map-container");
+const svg = d3.select("#map");
+const g   = svg.append("g");
+
+const zoom = d3.zoom()
+  .scaleExtent([0.5, 60])
+  .on("zoom", event => {
+    currentTransform = event.transform;
+    g.attr("transform", event.transform);
+    const sw = Math.max(0.1, 0.4 / event.transform.k);
+    g.selectAll(".tract").style("stroke-width", sw + "px");
+    renderTiles(event.transform);
+  });
+
+svg.call(zoom);
+document.getElementById("zoom-in").addEventListener("click",  () => svg.transition().duration(300).call(zoom.scaleBy, 1.6));
+document.getElementById("zoom-out").addEventListener("click", () => svg.transition().duration(300).call(zoom.scaleBy, 0.625));
+document.getElementById("zoom-reset").addEventListener("click", () => svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity));
+
+// ═══════════════════════════════════════════════════════════════
+//  Tile layer  (XYZ — ESRI Light Gray, visible when k ≥ 19)
+// ═══════════════════════════════════════════════════════════════
+const tileCanvas = document.getElementById("tile-canvas");
+const tileCtx    = tileCanvas.getContext("2d");
+const tileCache  = new Map();          // url → HTMLImageElement
+let   currentTransform = d3.zoomIdentity;
+
+function latToTileY(lat, z) {
+  const s = Math.sin(lat * Math.PI / 180);
+  return Math.floor((0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * (1 << z));
+}
+function lonToTileX(lon, z) { return Math.floor((lon + 180) / 360 * (1 << z)); }
+
+function tileTopLeft(tx, ty, z) {
+  const n = Math.PI - 2 * Math.PI * ty / (1 << z);
+  return [tx / (1 << z) * 360 - 180,
+          180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)))];
+}
+
+function tileScreenPos(tx, ty, z, transform) {
+  const [lon, lat] = tileTopLeft(tx, ty, z);
+  const [px, py]   = projection([lon, lat]);
+  return [px * transform.k + transform.x, py * transform.k + transform.y];
+}
+
+function renderTiles(transform) {
+  if (!projection) return;
+
+  const W = tileCanvas.width, H = tileCanvas.height;
+  tileCtx.clearRect(0, 0, W, H);
+
+  if (transform.k < 19) { tileCanvas.style.opacity = "0"; return; }
+  tileCanvas.style.opacity = "1";
+
+  // Derive tile zoom z from effective map scale
+  const z = Math.min(19, Math.max(1,
+    Math.round(Math.log2(2 * Math.PI * projection.scale() * transform.k / 256))));
+
+  // Unproject screen corners to find the visible tile range
+  const unproj = (sx, sy) =>
+    projection.invert([(sx - transform.x) / transform.k,
+                       (sy - transform.y) / transform.k]);
+  const corners = [[0,0],[W,0],[0,H],[W,H]].map(([a,b]) => unproj(a,b)).filter(Boolean);
+  if (!corners.length) return;
+
+  const lons = corners.map(c => c[0]), lats = corners.map(c => c[1]);
+  const minTX = lonToTileX(Math.min(...lons), z), maxTX = lonToTileX(Math.max(...lons), z);
+  const minTY = latToTileY(Math.max(...lats), z), maxTY = latToTileY(Math.min(...lats), z);
+
+  // Tile dimensions in screen pixels
+  const [x0, y0] = tileScreenPos(minTX,     minTY,     z, transform);
+  const [x1, y1] = tileScreenPos(minTX + 1, minTY + 1, z, transform);
+  const tileW = x1 - x0, tileH = y1 - y0;
+
+  for (let tx = minTX; tx <= maxTX; tx++) {
+    for (let ty = minTY; ty <= maxTY; ty++) {
+      const url = `http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/${z}/${ty}/${tx}`;
+      const [sx, sy] = tileScreenPos(tx, ty, z, transform);
+
+      const draw = img =>
+        tileCtx.drawImage(img, Math.round(sx), Math.round(sy),
+                               Math.ceil(tileW), Math.ceil(tileH));
+
+      if (tileCache.has(url)) {
+        const img = tileCache.get(url);
+        if (img.complete && img.naturalWidth) draw(img);
+      } else {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload  = () => renderTiles(currentTransform); // re-draw all on load
+        img.onerror = () => {};
+        img.src = url;
+        tileCache.set(url, img);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Colour helpers
+// ═══════════════════════════════════════════════════════════════
+function classify(value, breaks) {
+  if (value <= breaks[0]) return 0;
+  if (value <= breaks[1]) return 1;
+  return 2;
+}
+
+function computeEqualIntervals(values) {
+  const min = Math.min(...values), max = Math.max(...values);
+  const step = (max - min) / 3;
+  return [min + step, min + 2 * step];
+}
+
+function getTractColor(p) {
+  if (p.pct_french == null) return null;
+  if (activeTab === 'bivariate') {
+    return COLOR_MATRIX[classify(p.pct_french, frBreaks)][classify(p.pct_english, enBreaks)];
+  }
+  return trivariateColor(p.pct_french, p.pct_english, p.pct_non_official);
+}
+
+function applyColors() {
+  if (!geoData) return;
+  g.selectAll(".tract:not(.no-data)").attr("fill", d => getTractColor(d.properties));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Bivariate highlight / filter
+// ═══════════════════════════════════════════════════════════════
+function highlightClass(frCls, enCls) {
+  g.selectAll(".tract:not(.no-data)").style("opacity", d => {
+    if (!d.properties.pct_french) return 0.15;
+    const f = classify(d.properties.pct_french, frBreaks);
+    const e = classify(d.properties.pct_english, enBreaks);
+    return (f === frCls && e === enCls) ? 1 : 0.12;
+  });
+}
+
+function clearHighlight() {
+  g.selectAll(".tract").style("opacity", 1);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Tooltip
+// ═══════════════════════════════════════════════════════════════
+const tooltip = document.getElementById("tooltip");
+
+function showTooltip(event, d) {
+  const p = d.properties;
+  if (p.pct_french == null) return;
+  const color = getTractColor(p);
+
+  tooltip.innerHTML = `
+    <h3><span class="tt-swatch" style="background:${color}"></span>Tract ${p.name}</h3>
+    ${p.name_2 ? `<div style="font-size:0.7rem;color:#8899aa;margin:-4px 0 6px 15px;">${p.name_2}</div>` : ''}
+    <div class="tt-row"><span class="tt-label">French</span><span>${p.pct_french.toFixed(1)}%</span></div>
+    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_french}%;background:#169dd0"></div></div>
+    <div class="tt-row"><span class="tt-label">English</span><span>${p.pct_english.toFixed(1)}%</span></div>
+    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_english}%;background:#dd6a29"></div></div>
+    <div class="tt-row"><span class="tt-label">Other</span><span>${(p.pct_non_official||0).toFixed(1)}%</span></div>
+    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_non_official||0}%;background:#3cb44b"></div></div>
+    <div class="tt-row" style="margin-top:4px;font-size:0.68rem;">
+      <span class="tt-label">Population</span><span>${(p.Population||0).toLocaleString()}</span>
+    </div>`;
+  tooltip.classList.add("visible");
+  moveTooltip(event);
+  updateInfoPanel(p, color);
+}
+
+function moveTooltip(event) {
+  const rect = mapContainer.getBoundingClientRect();
+  let x = event.clientX - rect.left + 14;
+  let y = event.clientY - rect.top  + 14;
+  if (x + 230 > rect.width)  x = event.clientX - rect.left - 230;
+  if (y + 220 > rect.height) y = event.clientY - rect.top  - 220;
+  tooltip.style.left = x + "px";
+  tooltip.style.top  = y + "px";
+}
+
+function hideTooltip() { tooltip.classList.remove("visible"); }
+
+// ═══════════════════════════════════════════════════════════════
+//  Sidebar info panel
+// ═══════════════════════════════════════════════════════════════
+function resetInfoPanel() {
+  document.getElementById("info-panel").innerHTML = `
+    <div class="panel-title">Census Tract Info</div>
+    <p style="font-size:0.73rem;color:#556677;">Hover a tract on the map to see details.</p>`;
+}
+
+function updateInfoPanel(p, color) {
+  const rows = [
+    ["Tract",      p.name],
+    ["District",   p.name_2 || "—"],
+    ["Population", (p.Population||0).toLocaleString()],
+    ["Dwellings",  (p.Dwellings||0).toLocaleString()],
+    ["French %",   p.pct_french.toFixed(2) + "%"],
+    ["English %",  p.pct_english.toFixed(2) + "%"],
+    ["Other %",    (p.pct_non_official||0).toFixed(2) + "%"],
+    ["Arabic %",   (p.pct_arabic||0).toFixed(2) + "%"],
+    ["Spanish %",  (p.pct_spanish||0).toFixed(2) + "%"],
+    ["Italian %",  (p.pct_italian||0).toFixed(2) + "%"],
+  ];
+  if (activeTab === 'bivariate') {
+    rows.push(["Colour class",
+      `<span class="tt-swatch" style="background:${color}"></span>` +
+      ` FR${classify(p.pct_french,frBreaks)+1} / EN${classify(p.pct_english,enBreaks)+1}`]);
+  }
+  document.getElementById("info-panel").innerHTML = `
+    <div class="panel-title">Census Tract Info</div>
+    ${rows.map(([k,v]) => `<div class="info-row"><span class="info-key">${k}</span><span>${v}</span></div>`).join("")}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Projection
+// ═══════════════════════════════════════════════════════════════
+let projection, path;
+
+function buildProjection(features, svgEl) {
+  const w = svgEl.clientWidth  || svgEl.getBoundingClientRect().width;
+  const h = svgEl.clientHeight || svgEl.getBoundingClientRect().height;
+  projection = d3.geoMercator().fitExtent([[20,20],[w-20,h-20]], { type:"FeatureCollection", features });
+  path = d3.geoPath(projection);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════════
+async function init() {
+  drawTriangleLegend();
+
+  // Size tile canvas to match container
+  tileCanvas.width  = mapContainer.clientWidth;
+  tileCanvas.height = mapContainer.clientHeight;
+
+  geoData = await d3.json("montreal_mother_tongue_ct_admin.geojson");
+  document.getElementById("loader").style.display = "none";
+
+  const valid = geoData.features.filter(f => f.properties.pct_french != null && f.properties.pct_english != null);
+  frBreaks = computeEqualIntervals(valid.map(f => f.properties.pct_french));
+  enBreaks = computeEqualIntervals(valid.map(f => f.properties.pct_english));
+
+  document.getElementById("breaks-content").innerHTML = `
+    <div style="margin-bottom:4px;color:#169dd0;">French %</div>
+    Low: &lt; ${frBreaks[0].toFixed(1)}%<br>
+    Mid: ${frBreaks[0].toFixed(1)}–${frBreaks[1].toFixed(1)}%<br>
+    High: &gt; ${frBreaks[1].toFixed(1)}%
+    <div style="margin:8px 0 4px;color:#dd6a29;">English %</div>
+    Low: &lt; ${enBreaks[0].toFixed(1)}%<br>
+    Mid: ${enBreaks[0].toFixed(1)}–${enBreaks[1].toFixed(1)}%<br>
+    High: &gt; ${enBreaks[1].toFixed(1)}%`;
+
+  buildProjection(geoData.features, document.getElementById("map"));
+
+  g.selectAll(".tract")
+    .data(geoData.features)
+    .join("path")
+      .attr("class", d => "tract" + (d.properties.pct_french == null ? " no-data" : ""))
+      .attr("d", path)
+      .attr("fill", d => getTractColor(d.properties))
+    .on("mousemove", (event, d) => { showTooltip(event, d); moveTooltip(event); })
+    .on("mouseleave", hideTooltip);
+
+  window.addEventListener("resize", () => {
+    tileCanvas.width  = mapContainer.clientWidth;
+    tileCanvas.height = mapContainer.clientHeight;
+    buildProjection(geoData.features, document.getElementById("map"));
+    g.selectAll(".tract").attr("d", path);
+    renderTiles(currentTransform);
+  });
+}
+
+init().catch(err => {
+  document.getElementById("loader").innerHTML =
+    `<span style="color:#c85a5a">Error loading data: ${err.message}</span>`;
+});
+</script>
+</body>
+</html>
