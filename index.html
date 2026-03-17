@@ -670,7 +670,7 @@ function showTooltip(event, d) {
     <div class="tt-row"><span class="tt-label">English</span><span>${p.pct_english.toFixed(1)}%</span></div>
     <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_english}%;background:#dd6a29"></div></div>
     <div class="tt-row"><span class="tt-label">Other</span><span>${(p.pct_non_official||0).toFixed(1)}%</span></div>
-    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_non_official||0}%;background:#d3d3d3"></div></div>
+    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_non_official||0}%;background:#3cb44b"></div></div>
     <div class="tt-row" style="margin-top:4px;font-size:0.68rem;">
       <span class="tt-label">Population</span><span>${(p.Population||0).toLocaleString()}</span>
     </div>`;
@@ -712,6 +712,7 @@ function updateInfoPanel(p, color) {
     ["Arabic %",   (p.pct_arabic||0).toFixed(2) + "%"],
     ["Spanish %",  (p.pct_spanish||0).toFixed(2) + "%"],
     ["Italian %",  (p.pct_italian||0).toFixed(2) + "%"],
+    ["Mandarin %",  (p.pct_mandarin||0).toFixed(2) + "%"],
   ];
   if (activeTab === 'bivariate') {
     rows.push(["Colour class",
