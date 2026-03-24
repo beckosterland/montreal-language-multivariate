@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Montréal CMA — Mother Tongue Languages</title>
+  <title>Montréal CMA — MAllophone Tongue Languages</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -271,7 +271,7 @@
   <div>
     <h1>Two Solitudes No More?</h1>
     <h2>The Liguistic Mix of Montréal's Census Metropolitan Area</h2>
-    <p id="subtitle">Bivariate map of Français &amp; English speakers by census tract · 2021 Census</p>
+    <p id="subtitle">Bivariate map of Francophone &amp; Anglophone mAllophone-tongue speakers by census tract · 2021 Census</p>
   </div>
   <div id="tab-bar">
     <button class="tab active" id="tab-bivariate">BIVARIATE</button>
@@ -301,14 +301,14 @@
         <div class="panel-title">Bivariate Legend</div>
         <div id="legend-wrap">
           <div id="legend-axes">
-            <div class="axis-label">← Low &nbsp; Français % &nbsp; High →</div>
+            <div class="axis-label">← Low &nbsp; Francophone % &nbsp; High →</div>
           </div>
           <div>
             <div id="legend-grid"></div>
             <div id="legend-bottom">
-              <span class="legend-bottom-label">Low<br>English %</span>
+              <span class="legend-bottom-label">Low<br>Anglophone %</span>
               <span class="legend-arrow">→</span>
-              <span class="legend-bottom-label">High<br>English %</span>
+              <span class="legend-bottom-label">High<br>Anglophone %</span>
             </div>
           </div>
         </div>
@@ -342,9 +342,9 @@
       <div class="panel">
         <div class="panel-title">Colour Anchors</div>
         <div style="font-size:0.73rem;line-height:2.1;">
-          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#169dd0;vertical-align:middle;margin-right:6px;"></span>Français<br>
-          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#dd6a29;vertical-align:middle;margin-right:6px;"></span>English<br>
-          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#3cb44b;vertical-align:middle;margin-right:6px;"></span>Other language
+          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#169dd0;vertical-align:middle;margin-right:6px;"></span>Francophone<br>
+          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#dd6a29;vertical-align:middle;margin-right:6px;"></span>Anglophone<br>
+          <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#3cb44b;vertical-align:middle;margin-right:6px;"></span>Allophone
         </div>
       </div>
 
@@ -368,12 +368,12 @@ const COLOR_MATRIX = [
   ["#7ebbd2", "#819185", "#845e29"],  // FR=Mid
   ["#169dd0", "#167984", "#174f28"],  // FR=High
 ];
-const FR_LABELS = ["Low Français",  "Mid Français",  "High Français"];
-const EN_LABELS = ["Low English", "Mid English", "High English"];
+const FR_LABELS = ["Low Francophone",  "Mid Francophone",  "High Francophone"];
+const EN_LABELS = ["Low Anglophone", "Mid Anglophone", "High Anglophone"];
 
 // ═══════════════════════════════════════════════════════════════
 //  TRIVARIATE colour blend
-//  Anchors: French=#169dd0  English=#dd6a29  Other=#3cb44b
+//  Anchors: French=#169dd0  Anglophone=#dd6a29  Allophone=#3cb44b
 // ═══════════════════════════════════════════════════════════════
 const ANCHORS = {
   fr: { r: 22,  g: 157, b: 208 },
@@ -429,8 +429,8 @@ function drawTriangleLegend() {
   const ctx = canvas.getContext("2d");
 
   const vFr = { x: SIZE / 2,   y: PAD        };  // top    = French
-  const vEn = { x: SIZE - PAD, y: SIZE - PAD  };  // right  = English
-  const vOt = { x: PAD,        y: SIZE - PAD  };  // left   = Other
+  const vEn = { x: SIZE - PAD, y: SIZE - PAD  };  // right  = Anglophone
+  const vOt = { x: PAD,        y: SIZE - PAD  };  // left   = Allophone
 
   const denom = (vEn.y - vOt.y) * (vFr.x - vOt.x) + (vOt.x - vEn.x) * (vFr.y - vOt.y);
 
@@ -455,9 +455,9 @@ function drawTriangleLegend() {
   // Vertex labels
   const wrap = document.getElementById("legend-triangle-wrap");
   [
-    { text: "Français",  x: vFr.x, y: vFr.y, color: "#169dd0", tx: "-50%", ty: "-115%" },
-    { text: "English", x: vEn.x, y: vEn.y, color: "#dd6a29", tx: "-15%", ty: "12%"   },
-    { text: "Other",   x: vOt.x, y: vOt.y, color: "#3cb44b", tx: "-85%", ty: "12%"   },
+    { text: "Francophone",  x: vFr.x, y: vFr.y, color: "#169dd0", tx: "-50%", ty: "-115%" },
+    { text: "Anglophone", x: vEn.x, y: vEn.y, color: "#dd6a29", tx: "-15%", ty: "12%"   },
+    { text: "Allophone",   x: vOt.x, y: vOt.y, color: "#3cb44b", tx: "-85%", ty: "12%"   },
   ].forEach(({ text, x, y, color, tx, ty }) => {
     const el = document.createElement("div");
     el.className = "vertex-label";
@@ -478,8 +478,8 @@ let geoData, frBreaks, enBreaks;
 //  Tab switching
 // ═══════════════════════════════════════════════════════════════
 const SUBTITLES = {
-  bivariate:  'Bivariate map of Français &amp; English speakers by census tract · 2021 Census',
-  trivariate: 'Trivariate map of Français, English &amp; Other language speakers by census tract · 2021 Census',
+  bivariate:  'Bivariate map of Francophone &amp; Anglophone speakers by census tract · 2021 Census',
+  trivariate: 'Trivariate map of Francophone, Anglophone &amp; Allophone speakers by census tract · 2021 Census',
 };
 
 function switchTab(tab) {
@@ -626,9 +626,9 @@ function computeEqualIntervals(values) {
 function getTractColor(p) {
   if (p.pct_french == null) return null;
   if (activeTab === 'bivariate') {
-    return COLOR_MATRIX[classify(p.pct_french, frBreaks)][classify(p.pct_english, enBreaks)];
+    return COLOR_MATRIX[classify(p.pct_french, frBreaks)][classify(p.pct_Anglophone, enBreaks)];
   }
-  return trivariateColor(p.pct_french, p.pct_english, p.pct_non_official);
+  return trivariateColor(p.pct_french, p.pct_Anglophone, p.pct_non_official);
 }
 
 function applyColors() {
@@ -643,7 +643,7 @@ function highlightClass(frCls, enCls) {
   g.selectAll(".tract:not(.no-data)").style("opacity", d => {
     if (!d.properties.pct_french) return 0.15;
     const f = classify(d.properties.pct_french, frBreaks);
-    const e = classify(d.properties.pct_english, enBreaks);
+    const e = classify(d.properties.pct_Anglophone, enBreaks);
     return (f === frCls && e === enCls) ? 1 : 0.12;
   });
 }
@@ -665,11 +665,11 @@ function showTooltip(event, d) {
   tooltip.innerHTML = `
     <h3><span class="tt-swatch" style="background:${color}"></span>Tract ${p.name}</h3>
     ${p.name_2 ? `<div style="font-size:0.7rem;color:#8899aa;margin:-4px 0 6px 15px;">${p.name_2}</div>` : ''}
-    <div class="tt-row"><span class="tt-label">Français</span><span>${p.pct_french.toFixed(1)}%</span></div>
+    <div class="tt-row"><span class="tt-label">Francophone</span><span>${p.pct_french.toFixed(1)}%</span></div>
     <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_french}%;background:#169dd0"></div></div>
-    <div class="tt-row"><span class="tt-label">English</span><span>${p.pct_english.toFixed(1)}%</span></div>
-    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_english}%;background:#dd6a29"></div></div>
-    <div class="tt-row"><span class="tt-label">Other</span><span>${(p.pct_non_official||0).toFixed(1)}%</span></div>
+    <div class="tt-row"><span class="tt-label">Anglophone</span><span>${p.pct_Anglophone.toFixed(1)}%</span></div>
+    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_Anglophone}%;background:#dd6a29"></div></div>
+    <div class="tt-row"><span class="tt-label">Allophone</span><span>${(p.pct_non_official||0).toFixed(1)}%</span></div>
     <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_non_official||0}%;background:#3cb44b"></div></div>
     <div class="tt-row" style="margin-top:4px;font-size:0.68rem;">
       <span class="tt-label">Population</span><span>${(p.Population||0).toLocaleString()}</span>
@@ -706,9 +706,9 @@ function updateInfoPanel(p, color) {
     ["District",   p.name_2 || "—"],
     ["Population", (p.Population||0).toLocaleString()],
     ["Dwellings",  (p.Dwellings||0).toLocaleString()],
-    ["Français %",   p.pct_french.toFixed(2) + "%"],
-    ["English %",  p.pct_english.toFixed(2) + "%"],
-    ["Other %",    (p.pct_non_official||0).toFixed(2) + "%"],
+    ["Francophone %",   p.pct_french.toFixed(2) + "%"],
+    ["Anglophone %",  p.pct_Anglophone.toFixed(2) + "%"],
+    ["Allophone %",    (p.pct_non_official||0).toFixed(2) + "%"],
     ["Arabic %",   (p.pct_arabic||0).toFixed(2) + "%"],
     ["Spanish %",  (p.pct_spanish||0).toFixed(2) + "%"],
     ["Italian %",  (p.pct_italian||0).toFixed(2) + "%"],
@@ -717,7 +717,7 @@ function updateInfoPanel(p, color) {
   if (activeTab === 'bivariate') {
     rows.push(["Colour class",
       `<span class="tt-swatch" style="background:${color}"></span>` +
-      ` FR${classify(p.pct_french,frBreaks)+1} / EN${classify(p.pct_english,enBreaks)+1}`]);
+      ` FR${classify(p.pct_french,frBreaks)+1} / EN${classify(p.pct_Anglophone,enBreaks)+1}`]);
   }
   document.getElementById("info-panel").innerHTML = `
     <div class="panel-title">Census Tract Info</div>
@@ -746,19 +746,19 @@ async function init() {
   tileCanvas.width  = mapContainer.clientWidth;
   tileCanvas.height = mapContainer.clientHeight;
 
-  geoData = await d3.json("montreal_mother_tongue_ct_admin.geojson");
+  geoData = await d3.json("montreal_mAllophone_tongue_ct_admin.geojson");
   document.getElementById("loader").style.display = "none";
 
-  const valid = geoData.features.filter(f => f.properties.pct_french != null && f.properties.pct_english != null);
+  const valid = geoData.features.filter(f => f.properties.pct_french != null && f.properties.pct_Anglophone != null);
   frBreaks = computeEqualIntervals(valid.map(f => f.properties.pct_french));
-  enBreaks = computeEqualIntervals(valid.map(f => f.properties.pct_english));
+  enBreaks = computeEqualIntervals(valid.map(f => f.properties.pct_Anglophone));
 
   document.getElementById("breaks-content").innerHTML = `
-    <div style="margin-bottom:4px;color:#169dd0;">Français %</div>
+    <div style="margin-bottom:4px;color:#169dd0;">Francophone %</div>
     Low: &lt; ${frBreaks[0].toFixed(1)}%<br>
     Mid: ${frBreaks[0].toFixed(1)}–${frBreaks[1].toFixed(1)}%<br>
     High: &gt; ${frBreaks[1].toFixed(1)}%
-    <div style="margin:8px 0 4px;color:#dd6a29;">English %</div>
+    <div style="margin:8px 0 4px;color:#dd6a29;">Anglophone %</div>
     Low: &lt; ${enBreaks[0].toFixed(1)}%<br>
     Mid: ${enBreaks[0].toFixed(1)}–${enBreaks[1].toFixed(1)}%<br>
     High: &gt; ${enBreaks[1].toFixed(1)}%`;
