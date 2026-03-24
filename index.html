@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Montréal CMA — MAllophone Tongue Languages</title>
+  <title>Montréal CMA — Mother Tongue Languages</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -271,7 +271,7 @@
   <div>
     <h1>Two Solitudes No More?</h1>
     <h2>The Liguistic Mix of Montréal's Census Metropolitan Area</h2>
-    <p id="subtitle">Bivariate map of Francophone &amp; Anglophone mAllophone-tongue speakers by census tract · 2021 Census</p>
+    <p id="subtitle">Bivariate map of Francophone &amp; Anglophone mother-tongue speakers by census tract · 2021 Census</p>
   </div>
   <div id="tab-bar">
     <button class="tab active" id="tab-bivariate">BIVARIATE</button>
@@ -746,7 +746,7 @@ async function init() {
   tileCanvas.width  = mapContainer.clientWidth;
   tileCanvas.height = mapContainer.clientHeight;
 
-  geoData = await d3.json("montreal_mAllophone_tongue_ct_admin.geojson");
+  geoData = await d3.json("montreal_mother_tongue_ct_admin.geojson");
   document.getElementById("loader").style.display = "none";
 
   const valid = geoData.features.filter(f => f.properties.pct_french != null && f.properties.pct_Anglophone != null);
