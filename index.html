@@ -626,9 +626,9 @@ function computeEqualIntervals(values) {
 function getTractColor(p) {
   if (p.pct_french == null) return null;
   if (activeTab === 'bivariate') {
-    return COLOR_MATRIX[classify(p.pct_french, frBreaks)][classify(p.pct_Anglophone, enBreaks)];
+    return COLOR_MATRIX[classify(p.pct_french, frBreaks)][classify(p.pct_english, enBreaks)];
   }
-  return trivariateColor(p.pct_french, p.pct_Anglophone, p.pct_non_official);
+  return trivariateColor(p.pct_french, p.pct_english, p.pct_non_official);
 }
 
 function applyColors() {
@@ -643,7 +643,7 @@ function highlightClass(frCls, enCls) {
   g.selectAll(".tract:not(.no-data)").style("opacity", d => {
     if (!d.properties.pct_french) return 0.15;
     const f = classify(d.properties.pct_french, frBreaks);
-    const e = classify(d.properties.pct_Anglophone, enBreaks);
+    const e = classify(d.properties.pct_english, enBreaks);
     return (f === frCls && e === enCls) ? 1 : 0.12;
   });
 }
@@ -667,8 +667,8 @@ function showTooltip(event, d) {
     ${p.name_2 ? `<div style="font-size:0.7rem;color:#8899aa;margin:-4px 0 6px 15px;">${p.name_2}</div>` : ''}
     <div class="tt-row"><span class="tt-label">Francophone</span><span>${p.pct_french.toFixed(1)}%</span></div>
     <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_french}%;background:#169dd0"></div></div>
-    <div class="tt-row"><span class="tt-label">Anglophone</span><span>${p.pct_Anglophone.toFixed(1)}%</span></div>
-    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_Anglophone}%;background:#dd6a29"></div></div>
+    <div class="tt-row"><span class="tt-label">Anglophone</span><span>${p.pct_english.toFixed(1)}%</span></div>
+    <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_english}%;background:#dd6a29"></div></div>
     <div class="tt-row"><span class="tt-label">Allophone</span><span>${(p.pct_non_official||0).toFixed(1)}%</span></div>
     <div class="tt-bar-wrap"><div class="tt-bar" style="width:${p.pct_non_official||0}%;background:#3cb44b"></div></div>
     <div class="tt-row" style="margin-top:4px;font-size:0.68rem;">
@@ -707,7 +707,7 @@ function updateInfoPanel(p, color) {
     ["Population", (p.Population||0).toLocaleString()],
     ["Dwellings",  (p.Dwellings||0).toLocaleString()],
     ["Francophone %",   p.pct_french.toFixed(2) + "%"],
-    ["Anglophone %",  p.pct_Anglophone.toFixed(2) + "%"],
+    ["Anglophone %",  p.pct_english.toFixed(2) + "%"],
     ["Allophone %",    (p.pct_non_official||0).toFixed(2) + "%"],
     ["Arabic %",   (p.pct_arabic||0).toFixed(2) + "%"],
     ["Spanish %",  (p.pct_spanish||0).toFixed(2) + "%"],
@@ -717,7 +717,7 @@ function updateInfoPanel(p, color) {
   if (activeTab === 'bivariate') {
     rows.push(["Colour class",
       `<span class="tt-swatch" style="background:${color}"></span>` +
-      ` FR${classify(p.pct_french,frBreaks)+1} / EN${classify(p.pct_Anglophone,enBreaks)+1}`]);
+      ` FR${classify(p.pct_french,frBreaks)+1} / EN${classify(p.pct_english,enBreaks)+1}`]);
   }
   document.getElementById("info-panel").innerHTML = `
     <div class="panel-title">Census Tract Info</div>
@@ -749,9 +749,9 @@ async function init() {
   geoData = await d3.json("montreal_mother_tongue_ct_admin.geojson");
   document.getElementById("loader").style.display = "none";
 
-  const valid = geoData.features.filter(f => f.properties.pct_french != null && f.properties.pct_Anglophone != null);
+  const valid = geoData.features.filter(f => f.properties.pct_french != null && f.properties.pct_english != null);
   frBreaks = computeEqualIntervals(valid.map(f => f.properties.pct_french));
-  enBreaks = computeEqualIntervals(valid.map(f => f.properties.pct_Anglophone));
+  enBreaks = computeEqualIntervals(valid.map(f => f.properties.pct_english));
 
   document.getElementById("breaks-content").innerHTML = `
     <div style="margin-bottom:4px;color:#169dd0;">Francophone %</div>
